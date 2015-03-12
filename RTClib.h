@@ -23,6 +23,8 @@ public:
     uint8_t second() const      { return ss; }
     uint8_t dayOfWeek() const;
 
+    bool isDST() const; // Should we be adjusting for Daylight Savings Time? 
+
     // 32-bit times as seconds since 1/1/2000
     long secondstime() const;   
     // 32-bit times as seconds since 1/1/1970

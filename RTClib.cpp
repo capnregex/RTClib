@@ -163,6 +163,18 @@ uint8_t DateTime::dayOfWeek() const {
     return (day + 6) % 7; // Jan 1, 2000 is a Saturday, i.e. returns 6
 }
 
+bool DateTime::isDST() const {
+    if (m < 3 || m > 11) return false; // January, February, and December are false.
+    if (m > 3 && m < 11) return true;  // April to October are true
+
+    int previousSund = d - dayOfWeek();
+    if (m == 3) { return previousSund >= 8; } //  In march, we are DST if our previous sund was on or after the 8th.
+    //In november we must be before the first sund to be dst.
+    //That means the previous sund must be before the 1st.
+    return previousSund <= 0;
+}
+
+
 uint32_t DateTime::unixtime(void) const {
   uint32_t t;
   uint16_t days = date2days(yOff, m, d);
@@ -261,8 +273,14 @@ DateTime RTC_DS1307::now() {
   uint8_t d = bcd2bin(WIRE._I2C_READ());
   uint8_t m = bcd2bin(WIRE._I2C_READ());
   uint16_t y = bcd2bin(WIRE._I2C_READ()) + 2000;
-  
-  return DateTime (y, m, d, hh, mm, ss);
+  TimeSpan hour(0,1,0,0);
+  DateTime dt = DateTime (y, m, d, hh, mm, ss);
+
+  if (dt.isDST()) {
+    return dt + hour;
+  } else {
+    return dt;
+  }
 }
 
 Ds1307SqwPinMode RTC_DS1307::readSqwPinMode() {
